@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<!-- 內容是社團成員的貼文，不讓搜尋引擎收錄 -->
+<meta name="robots" content="noindex,nofollow">
+<title>陀螺行情站</title>
+<meta name="theme-color" content="#101418">
+<style>
+:root{
+  --bg:#F5F6F3;--card:#FFFFFF;--soft:#ECEEE9;--line:#DCDFD8;
+  --ink:#16191C;--ink2:#4E555C;--ink3:#7A818A;
+  --acc:#2F6BFF;--acc-ink:#FFFFFF;
+  --good:#0F8A5F;--bad:#D23B3B;--warn:#B07A00;
+  --mono:ui-monospace,"Cascadia Mono",Consolas,monospace;
+  --sans:"Microsoft JhengHei","PingFang TC","Noto Sans TC",system-ui,sans-serif;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#101418;--card:#171C21;--soft:#1F262C;--line:#2A333B;
+    --ink:#EEF1F4;--ink2:#AEB6BF;--ink3:#86909A;
+    --acc:#5B8CFF;--acc-ink:#0B0E12;
+    --good:#3DD69A;--bad:#FF7A7A;--warn:#F2C14E;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#101418;--card:#171C21;--soft:#1F262C;--line:#2A333B;
+  --ink:#EEF1F4;--ink2:#AEB6BF;--ink3:#86909A;
+  --acc:#5B8CFF;--acc-ink:#0B0E12;
+  --good:#3DD69A;--bad:#FF7A7A;--warn:#F2C14E;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.55 var(--sans)}
+input,button{font:inherit;color:var(--ink)}
+.wrap{max-width:980px;margin:0 auto;padding:0 16px 60px}
+header{display:flex;flex-wrap:wrap;gap:8px 16px;align-items:baseline;justify-content:space-between;padding:18px 0 10px}
+h1{margin:0;font-size:24px;letter-spacing:.02em}
+h1 span{color:var(--acc)}
+.meta{font-size:12px;color:var(--ink3);font-family:var(--mono)}
+.demo{font-size:12.5px;background:var(--soft);border:1px dashed var(--line);border-radius:8px;padding:8px 12px;margin:0 0 10px;color:var(--ink2)}
+.demo b{color:var(--warn)}
+.sticky{position:sticky;top:0;z-index:5;background:var(--bg);padding:6px 0 8px}
+.tabs{display:flex;gap:4px;background:var(--soft);border-radius:10px;padding:4px;margin-bottom:8px}
+.tab{flex:1 0 auto;border:0;background:none;padding:8px 12px;border-radius:7px;font-weight:600;color:var(--ink2);cursor:pointer;white-space:nowrap}
+.tab.on{background:var(--card);color:var(--acc);box-shadow:0 1px 3px rgba(0,0,0,.12)}
+.inp{width:100%;font-size:16px;padding:11px 14px;border:1.5px solid var(--line);border-radius:10px;background:var(--card)}
+.inp:focus{outline:0;border-color:var(--acc)}
+.filters{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center;margin-top:8px;font-size:13px;color:var(--ink2)}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:7px;overflow:hidden;background:var(--card)}
+.seg button{border:0;background:none;padding:4px 10px;cursor:pointer;color:var(--ink2);font-size:12.5px;font-weight:600;border-left:1px solid var(--line)}
+.seg button:first-child{border-left:0}
+.seg button.on{background:var(--acc);color:var(--acc-ink)}
+.count{margin-left:auto;font-size:12.5px;color:var(--ink3)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;margin:10px 0;overflow:hidden}
+.ch{padding:12px 14px;display:grid;grid-template-columns:1fr auto;gap:6px 14px;align-items:center}
+.code{font-family:var(--mono);font-weight:700;color:var(--acc)}
+.name{color:var(--ink2);margin-left:6px}
+.big{font-size:30px;font-weight:800;line-height:1.1;font-variant-numeric:tabular-nums}
+.big.sold{color:var(--good)}.big.ask{color:var(--warn)}
+.sub{font-size:12px;color:var(--ink2)}
+.sub b{color:var(--ink)}
+.spark{width:180px;height:54px}
+@media (max-width:560px){.spark{width:110px}.big{font-size:26px}}
+.acts{display:flex;flex-wrap:wrap;gap:6px;padding:0 14px 12px;align-items:center}
+.btn{border:1px solid var(--line);background:var(--card);border-radius:7px;padding:5px 11px;font-size:12.5px;font-weight:600;color:var(--ink2);cursor:pointer}
+.btn:hover{border-color:var(--acc);color:var(--acc)}
+.btn.on{color:var(--warn);border-color:var(--warn)}
+.btn.pri{background:var(--acc);border-color:var(--acc);color:var(--acc-ink);padding:10px 18px}
+.liq{font-size:12px;color:var(--ink2)}
+.liq b.l3{color:var(--good)}.liq b.l1{color:var(--bad)}
+.rows{border-top:1px solid var(--line)}
+.row{display:flex;flex-wrap:wrap;gap:2px 10px;padding:6px 14px;border-top:1px solid var(--line);font-size:13px;align-items:baseline}
+.row:first-child{border-top:0}
+.rp{font-weight:700;min-width:64px;font-variant-numeric:tabular-nums}
+.rp.s0{color:var(--good)}
+.tag{font-size:11px;border:1px solid var(--line);border-radius:4px;padding:0 5px;color:var(--ink3);white-space:nowrap}
+.tag.s0{color:var(--good);border-color:var(--good)}
+.rd{font-family:var(--mono);font-size:11.5px;color:var(--ink3)}
+.raw{flex:1 1 220px;color:var(--ink2);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.row a{color:var(--acc);font-size:12px;text-decoration:none;white-space:nowrap}
+.dayhd{padding:5px 14px;background:var(--soft);border-top:1px solid var(--line);font-size:12px;font-weight:700;color:var(--ink2)}
+.rows > .dayhd:first-child{border-top:0}
+.more{padding:8px 14px;border-top:1px solid var(--line);text-align:center}
+@media (max-width:560px){.raw{flex-basis:100%;white-space:normal}}
+.home{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:10px;margin:10px 0}
+.hc{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 12px}
+.hc h3{margin:0 0 6px;font-size:14px}
+.hi{display:flex;gap:8px;align-items:baseline;width:100%;border:0;border-top:1px solid var(--line);background:none;padding:6px 2px;cursor:pointer;text-align:left;font-size:13px}
+.hi:first-of-type{border-top:0}
+.hi:hover{background:var(--soft)}
+.hi .code{min-width:56px}
+.hi .v{margin-left:auto;font-weight:700}
+.up{color:var(--bad)}.dn{color:var(--good)}
+.note{font-size:12px;color:var(--ink3);margin:6px 0 0}
+.frow{display:flex;flex-wrap:wrap;gap:10px;align-items:flex-end;margin:10px 0}
+.frow label{display:flex;flex-direction:column;gap:4px;font-size:12.5px;color:var(--ink2);flex:1 1 180px}
+.verdict{border:2px solid var(--line);border-radius:12px;padding:14px 16px;background:var(--card);margin-top:8px}
+.verdict.g{border-color:var(--good)}.verdict.b{border-color:var(--bad)}
+.verdict .vt{font-size:24px;font-weight:800}
+.verdict.g .vt{color:var(--good)}.verdict.b .vt{color:var(--bad)}
+.gauge{position:relative;height:10px;border-radius:5px;background:var(--soft);margin:26px 0 24px}
+.gauge .iqr{position:absolute;top:0;bottom:0;background:color-mix(in srgb,var(--acc) 30%,transparent);border-radius:5px}
+.gauge .mk{position:absolute;top:-4px;width:3px;height:18px;margin-left:-1px;background:var(--ink);border-radius:2px}
+.gauge .mk i{position:absolute;left:50%;transform:translateX(-50%);font-style:normal;font-size:11px;white-space:nowrap;color:var(--ink2)}
+.gauge .mk.med{opacity:.5}.gauge .mk.med i{top:20px}
+.gauge .mk.you{background:var(--acc)}.gauge .mk.you i{top:-18px;color:var(--acc);font-weight:700}
+.empty{padding:30px;text-align:center;color:var(--ink3)}
+footer{margin-top:28px;font-size:11.5px;color:var(--ink3);text-align:center;line-height:1.8}
+[hidden]{display:none!important}
+</style>
+<script src="models.js"></script>
+<!-- 後台（scraper/）每次跑完會產生 data.js；還沒跑過就沒有這個檔，頁面會改用示範資料 -->
+<script src="data.js" onerror="void 0"></script>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>陀螺<span>行情站</span></h1>
+    <span class="meta" id="meta"></span>
+  </header>
+  <p class="demo" id="demoNote" hidden><b>示範資料</b>：還沒有後台抓到的資料（data.js），目前是程式產生的假資料。到 scraper 資料夾執行 <code>npm run scrape</code> 之後重新整理就會換成社團的真實行情。</p>
+
+  <div class="sticky">
+    <div class="tabs" id="tabs">
+      <button class="tab on" data-tab="search">🔍 行情查詢</button>
+      <button class="tab" data-tab="deal">💰 划算嗎</button>
+    </div>
+    <div id="searchBar">
+      <input class="inp" id="q" placeholder="輸入關鍵字，例：UX03、神杖、蒼龍 日版" autocomplete="off">
+      <div class="filters">
+        <span>期間</span>
+        <span class="seg" id="winSeg">
+          <button data-w="0" class="on">自動</button><button data-w="3">3天</button><button data-w="7">7天</button><button data-w="15">15天</button>
+        </span>
+        <span>版本</span>
+        <span class="seg" id="verSeg">
+          <button data-v="0" class="on">全部</button><button data-v="1">日版</button><button data-v="2">台版</button><button data-v="3">亞版</button>
+        </span>
+        <span class="count" id="count"></span>
+      </div>
+    </div>
+  </div>
+
+  <main id="pSearch"><div id="list"></div></main>
+
+  <main id="pDeal" hidden>
+    <p class="sub">輸入關鍵字和價格，用社團最近 15 天的行情告訴你這個價便不便宜。</p>
+    <div class="frow">
+      <label>關鍵字 <input class="inp" id="dKey" placeholder="例：UX03、神杖 日版"></label>
+      <label style="flex:0 1 160px">價格 <input class="inp" id="dPrice" inputmode="numeric" placeholder="1600"></label>
+      <button class="btn pri" id="dGo">判斷</button>
+    </div>
+    <div id="dOut"></div>
+  </main>
+
+  <footer>只看最近 15 天，太舊的價格沒有參考價值 · 中位數＝排在正中間的價格 · 常見區間＝中間 50% 的價格<br>只用整顆計算、排除離譜價（低於 0.4 倍或高於 2.5 倍）、不含美版 · 有成交用成交價，沒有成交才用開價 · 僅供參考</footer>
+</div>
+
+<script>
+var MODELS = window.BB_MODELS || [];
+var SN = ['成交','在售','收購','競標'], VN = ['未標','日版','台版','亞版','美版'];
+var DAYS = 15, LOW_CUT = 0.4, HIGH_CUT = 2.5, MIN_N = 3;
+var LS_FAV = 'bbp:fav', LS_WIN = 'bbp:win';
+
+/* ===================== 小工具 ===================== */
+function $(id){ return document.getElementById(id); }
+function esc(s){ return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
+function nf(n){ return Number(n).toLocaleString('en-US'); }
+function today(){ var d = new Date(); d.setMinutes(d.getMinutes() - d.getTimezoneOffset()); return d.toISOString().slice(0, 10); }
+function ageOf(iso){ return Math.max(0, Math.round((Date.parse(today()) - Date.parse(iso)) / 86400000)); }
+function dateAgo(a){ return new Date(Date.parse(today()) - a * 86400000).toISOString().slice(0, 10); }
+function med(v){ v = v.slice().sort(function(a,b){return a-b;}); var n = v.length; return n ? (n % 2 ? v[(n-1)/2] : Math.round((v[n/2-1] + v[n/2]) / 2)) : 0; }
+function quart(v, p){ v = v.slice().sort(function(a,b){return a-b;}); var pos = (v.length-1)*p, lo = Math.floor(pos), hi = Math.min(lo+1, v.length-1); return Math.round(v[lo] + (v[hi]-v[lo]) * (pos-lo)); }
+function lsGet(k, d){ try { var v = localStorage.getItem(k); return v === null ? d : JSON.parse(v); } catch (e){ return d; } }
+function lsSet(k, v){ try { localStorage.setItem(k, JSON.stringify(v)); } catch (e){} }
+/* 型號寫法統一：ux3、UX 03、ux-03 → UX-03（跟後台 parse.mjs 同一套） */
+function normCode(s){
+  var m = String(s).toUpperCase().match(/^(BXG|BX|CX|UX)[-－]?0*(\d{1,2})$/);
+  return m ? m[1] + '-' + ('0' + m[2]).slice(-2) : '';
+}
+var MIDX = {}; MODELS.forEach(function(m){ MIDX[m.code] = m; });
+/* -00 是特別版，一個代碼底下有很多款，型號存成「CX-00·福音戰士」；認不出款式的就是「CX-00」本身 */
+function codeOf(m){ return String(m).split('·')[0]; }
+function label(code){
+  if (code.indexOf('·') > 0) return code.split('·')[1];   /* 分款用代碼後面的款名（「限定發射器」），不是第一個暱稱 */
+  if (MIDX[code]) return MIDX[code].names[0];
+  return /-00$/.test(code) ? '未分款（多款特別版混在一起）' : '';
+}
+
+/* ===================== 資料 ===================== */
+function demoData(){
+  var seed = 20261001;
+  function rnd(){ seed = (seed * 1103515245 + 12345) & 0x7fffffff; return seed / 0x7fffffff; }
+  var base = {'BX-01':900,'BX-02':650,'BX-03':550,'BX-04':600,'BX-23':700,'BX-26':520,'UX-01':1100,'UX-02':650,
+              'UX-03':1500,'UX-06':480,'UX-08':800,'UX-11':950,'CX-01':720,'CX-02':680,'CX-03':560};
+  var out = [], id = 0;
+  MODELS.forEach(function(m){
+    var b = base[m.code] || 600, drift = (rnd() - 0.5) * 0.3, n = 15 + Math.floor(rnd() * 50);
+    for (var i = 0; i < n; i++){
+      var age = Math.floor(rnd() * DAYS), s = rnd() < 0.2 ? 0 : (rnd() < 0.9 ? 1 : 2);
+      var v = rnd() < 0.55 ? 1 : (rnd() < 0.7 ? 2 : (rnd() < 0.5 ? 3 : 0));
+      var p = b * (1 + drift * (1 - age / DAYS)) * (s === 1 ? 1.08 : s === 2 ? 0.8 : 1) * (v === 1 ? 1.1 : v === 2 ? 0.92 : 1) * (0.85 + rnd() * 0.3);
+      if (rnd() < 0.02) p *= (rnd() < 0.5 ? 0.2 : 4);
+      p = Math.round(p / 10) * 10;
+      out.push({ id: 'demo' + (id++), m: m.code, d: dateAgo(age), p: p, s: s, k: 0, v: v, g: '示範社團', u: '',
+        raw: [['已售出','出','收','競標'][s], m.code, m.names[0], v ? VN[v] : '', '$' + p].join(' ') });
+    }
+  });
+  return out;
+}
+var DEMO = !(window.BB_DATA && BB_DATA.records && BB_DATA.records.length);
+var DATA = (DEMO ? demoData() : BB_DATA.records).filter(function(r){ r.a = ageOf(r.d); return r.a <= DAYS; });
+$('demoNote').hidden = !DEMO;
+(function(){
+  var sold = DATA.filter(function(r){ return r.s === 0; }).length;
+  var u = DEMO ? null : new Date(BB_DATA.updated);
+  var upd = u ? ' · 更新 ' + (u.getMonth() + 1) + '/' + u.getDate() + ' ' + ('0' + u.getHours()).slice(-2) + ':' + ('0' + u.getMinutes()).slice(-2) : '';
+  $('meta').textContent = '近 ' + DAYS + ' 天 ' + nf(DATA.length) + ' 筆 · 成交 ' + nf(sold) + upd;
+})();
+/* 每筆預先算好「可搜尋的字串」：型號、型號的各種名稱、貼文原文 */
+DATA.forEach(function(r){
+  r.h = (r.m + ' ' + r.m.replace('-', '') + ' ' + (MIDX[r.m] ? MIDX[r.m].names.join(' ') : '') + ' ' + r.raw).toLowerCase();
+});
+
+/* ===================== 搜尋 =====================
+   空白分開的每個關鍵字都要中。像型號的字（ux3）只比型號，其他字比型號名稱和貼文原文 */
+function search(q){
+  var toks = q.trim().toLowerCase().split(/\s+/).filter(Boolean);
+  if (!toks.length) return DATA;
+  return DATA.filter(function(r){
+    return toks.every(function(t){ var c = normCode(t); return c ? (r.m === c || r.m.indexOf(c + '·') === 0) : r.h.indexOf(t) >= 0; });
+  });
+}
+function groupBy(rows){
+  var g = {};
+  rows.forEach(function(r){ var k = r.m || ''; (g[k] = g[k] || []).push(r); });
+  return g;
+}
+
+/* ===================== 行情計算 ===================== */
+var WIN = lsGet(LS_WIN, 0), VER = 0;
+function cutOutliers(rs){
+  if (rs.length < 5) return rs;
+  var ref = med(rs.map(function(r){ return r.p; }));
+  return rs.filter(function(r){ return r.p >= ref * LOW_CUT && r.p <= ref * HIGH_CUT; });
+}
+function wholeOf(rows){ return rows.filter(function(r){ return !r.k && r.v !== 4 && (!VER || r.v === VER); }); }
+function summary(rows){
+  var whole = wholeOf(rows), src = '成交';
+  /* 成交要至少 3 筆才用：社團很少人回頭改「已售出」，一兩筆成交代表不了行情，不如用幾百筆開價 */
+  var use = whole.filter(function(r){ return r.s === 0; });
+  if (use.length < MIN_N){ var ask = whole.filter(function(r){ return r.s === 1; }); if (ask.length){ use = ask; src = '開價'; } }
+  if (!use.length) return null;
+  use = cutOutliers(use);
+  var pick = use, win = DAYS, widened = false;
+  if (WIN > 0 && WIN < DAYS){
+    pick = use.filter(function(r){ return r.a <= WIN; }); win = WIN;
+    if (pick.length < MIN_N){ pick = use; win = DAYS; widened = true; }   /* 樣本不夠就放寬到 15 天 */
+  } else if (WIN === 0){
+    var c = use.filter(function(r){ return r.a <= 7; });                   /* 自動：近 7 天夠 8 筆就只看 7 天 */
+    if (c.length >= 8){ pick = c; win = 7; }
+  }
+  var ps = pick.map(function(r){ return r.p; });
+  return { p: med(ps), lo: quart(ps, .25), hi: quart(ps, .75), n: ps.length, w: win, src: src, widened: widened };
+}
+function liquidity(rows){
+  var w = rows.filter(function(r){ return !r.k && r.v !== 4; });
+  var sold = w.filter(function(r){ return r.s === 0; }).length, sell = w.filter(function(r){ return r.s === 1; }).length;
+  var lv = sold >= 5 ? 3 : sold >= 2 ? 2 : 1;
+  return { sold: sold, sell: sell, lv: lv, txt: ['', '不好賣', '普通', '好賣'][lv] };
+}
+/* 走勢：15 天每 3 天一點（每天一點會被一兩筆畫出假尖峰） */
+function trend(rows){
+  var w = wholeOf(rows), rs = w.filter(function(r){ return r.s === 0; }), src = '成交';
+  if (rs.length < 6){ rs = w.filter(function(r){ return r.s === 1; }); src = '開價'; }
+  rs = cutOutliers(rs);
+  var g = {};
+  rs.forEach(function(r){ var b = Math.floor(r.a / 3); (g[b] = g[b] || []).push(r.p); });
+  var pts = Object.keys(g).map(function(b){ return { a: +b * 3 + 1, p: med(g[b]) }; }).sort(function(x, y){ return y.a - x.a; });
+  return pts.length >= 3 ? { pts: pts, src: src } : null;
+}
+function sparkSvg(t){
+  var W = 180, H = 54, P = 5, ps = t.pts.map(function(x){ return x.p; });
+  var mn = Math.min.apply(null, ps), mx = Math.max.apply(null, ps); if (mx === mn) mx = mn + 1;
+  var X = function(a){ return P + (DAYS - a) / DAYS * (W - 2 * P); }, Y = function(v){ return H - P - (v - mn) / (mx - mn) * (H - 2 * P); };
+  var d = t.pts.map(function(x, i){ return (i ? 'L' : 'M') + X(x.a).toFixed(1) + ' ' + Y(x.p).toFixed(1); }).join(' ');
+  var col = t.src === '成交' ? 'var(--good)' : 'var(--warn)', last = t.pts[t.pts.length - 1];
+  return '<svg class="spark" viewBox="0 0 ' + W + ' ' + H + '" preserveAspectRatio="none" role="img" aria-label="近15天走勢">'
+    + '<title>近 15 天每 3 天的' + t.src + '中位數：' + nf(mn) + '～' + nf(mx) + '</title>'
+    + '<path d="' + d + '" fill="none" stroke="' + col + '" stroke-width="2" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>'
+    + '<circle cx="' + X(last.a).toFixed(1) + '" cy="' + Y(last.p).toFixed(1) + '" r="3" fill="' + col + '"/></svg>';
+}
+/* 首頁排行：近 5 天 vs 第 6~15 天 */
+var RANK = null;
+function ranks(){
+  if (RANK) return RANK;
+  var mv = [], hot = [], g = groupBy(DATA);
+  Object.keys(g).forEach(function(code){
+    if (!code) return;
+    var w = cutOutliers(g[code].filter(function(r){ return !r.k && r.v !== 4; }));
+    if (w.length < 8) return;
+    var A = w.filter(function(r){ return r.a <= 5; }), B = w.filter(function(r){ return r.a > 5; });
+    if (A.length) hot.push({ code: code, n: A.length });
+    function mid(rs, s, need){ var v = rs.filter(function(r){ return r.s === s; }).map(function(r){ return r.p; }); return v.length >= need ? med(v) : null; }
+    var a = mid(A, 0, 3), b = mid(B, 0, 3);
+    if (a === null || b === null){ a = mid(A, 1, 5); b = mid(B, 1, 5); }
+    if (a === null || b === null) return;
+    var d = Math.round((a / b - 1) * 100);
+    if (Math.abs(d) >= 5) mv.push({ code: code, d: d });
+  });
+  mv.sort(function(x, y){ return y.d - x.d; }); hot.sort(function(x, y){ return y.n - x.n; });
+  return (RANK = { up: mv.filter(function(x){ return x.d > 0; }).slice(0, 5), dn: mv.filter(function(x){ return x.d < 0; }).reverse().slice(0, 5), hot: hot.slice(0, 5) });
+}
+
+/* ===================== 行情查詢頁 ===================== */
+var FAV = lsGet(LS_FAV, {}), OPEN = {}, SHOWN = {}, PAGE = 100;
+/* 明細排序：日期新→舊，同一天再金額高→低（使用者 2026-10-02 指定）。
+   這樣往下拉就是「今天最高價 → 今天最低價 → 昨天最高價 → 昨天最低價 …」，每天開頭加一條日期標題 */
+function detailHtml(key, rows){
+  var rs = rows.filter(function(r){ return !VER || r.v === VER; }).slice()
+    .sort(function(a, b){ return a.d < b.d ? 1 : a.d > b.d ? -1 : b.p - a.p; });
+  var perDay = {};
+  rs.forEach(function(r){ perDay[r.d] = (perDay[r.d] || 0) + 1; });
+  var n = SHOWN[key] || PAGE, out = '', last = '', t = today(), y = dateAgo(1);
+  rs.slice(0, n).forEach(function(r){
+    if (r.d !== last){
+      last = r.d;
+      out += '<div class="dayhd">' + r.d.slice(5).replace('-', '/') + (r.d === t ? '（今天）' : r.d === y ? '（昨天）' : '')
+        + ' · ' + perDay[r.d] + ' 筆</div>';
+    }
+    out += rowHtml(r);
+  });
+  if (rs.length > n) out += '<div class="more"><button class="btn" data-more="' + esc(key) + '">再顯示 ' + Math.min(PAGE, rs.length - n)
+    + ' 筆（還有 ' + (rs.length - n) + ' 筆）</button></div>';
+  return '<div class="rows">' + out + '</div>';
+}
+function winTxt(s){ return '近 ' + s.w + ' 天'; }
+function rowHtml(r){
+  return '<div class="row"><span class="rp s' + r.s + '">' + nf(r.p) + '</span><span class="tag s' + r.s + '">' + SN[r.s] + '</span>'
+    + (r.v ? '<span class="tag">' + VN[r.v] + '</span>' : '') + (r.k ? '<span class="tag">零件</span>' : '')
+    + '<span class="rd">' + r.d.slice(5) + '</span><span class="raw" title="' + esc(r.raw) + '">' + esc(r.raw) + '</span>'
+    + (r.u ? '<a href="' + esc(r.u) + '" target="_blank" rel="noopener">' + esc(r.g || '原文') + ' ↗</a>' : (r.g ? '<span class="rd">' + esc(r.g) + '</span>' : ''))
+    + '</div>';
+}
+function cardHtml(code, rows, q){
+  var key = code || '其他:' + q, s = summary(rows), lq = liquidity(rows), t = trend(rows);
+  var title = code ? '<span class="code">' + esc(codeOf(code)) + '</span><span class="name">' + esc(label(code)) + '</span>'
+                   : '<span class="code">其他貼文</span><span class="name">型號表沒有、但內文提到「' + esc(q) + '」</span>';
+  var price = s
+    ? '<div><div class="big ' + (s.src === '成交' ? 'sold' : 'ask') + '">NT$' + nf(s.p) + '</div>'
+      + '<div class="sub">常見 <b>' + nf(s.lo) + '～' + nf(s.hi) + '</b> · ' + winTxt(s) + ' ' + s.n + ' 筆' + s.src
+      + (s.src === '開價' ? '（沒有成交，用賣家開價，通常偏高）' : '')
+      + (s.widened ? ' · 選的期間太少筆，改用 15 天' : '') + (s.n < 5 ? ' · ⚠ 樣本少' : '') + '</div></div>'
+    : '<div class="sub">這個條件下沒有整顆的價格（可能都是零件或美版）</div>';
+  var fav = code && FAV[code], favTxt = '';
+  if (fav && s){ var d = s.p - fav.p; favTxt = '<span class="sub">' + (d < 0 ? '比追蹤時便宜 ' + nf(-d) : d > 0 ? '比追蹤時貴 ' + nf(d) : '跟追蹤時一樣') + '</span>'; }
+  var acts = '<div class="acts">'
+    + (code ? '<button class="btn' + (fav ? ' on' : '') + '" data-fav="' + esc(code) + '">' + (fav ? '★ 追蹤中' : '☆ 追蹤') + '</button>' : '')
+    + '<button class="btn" data-open="' + esc(key) + '">' + (OPEN[key] ? '收起明細' : '看明細（' + rows.length + '）') + '</button>'
+    + '<span class="liq">🔄 成交 ' + lq.sold + ' 筆 · ' + lq.sell + ' 筆在賣 · <b class="l' + lq.lv + '">' + lq.txt + '</b></span>'
+    + favTxt + '</div>';
+  var list = OPEN[key] ? detailHtml(key, rows) : '';
+  return '<div class="card"><div class="ch"><div>' + title + '</div><div>' + (t ? sparkSvg(t) : '') + '</div>' + price + '</div>' + acts + list + '</div>';
+}
+function homeHtml(){
+  var r = ranks(), out = '', g = groupBy(DATA);
+  var fk = Object.keys(FAV).filter(function(c){ return g[c]; });
+  if (fk.length) out += '<div class="hc"><h3>⭐ 我追蹤的</h3>' + fk.map(function(c){
+    var s = summary(g[c]); if (!s) return '';
+    var d = s.p - FAV[c].p;
+    return '<button class="hi" data-go="' + esc(c) + '"><span class="code">' + esc(codeOf(c)) + '</span>' + esc(label(c))
+      + '<span class="v ' + (d < 0 ? 'dn' : d > 0 ? 'up' : '') + '">' + nf(s.p) + (d ? '（' + (d > 0 ? '+' : '') + nf(d) + '）' : '') + '</span></button>';
+  }).join('') + '<p class="note">括號＝跟你按追蹤那天比</p></div>';
+  function col(title, arr, note, hot){
+    if (!arr.length) return '';
+    return '<div class="hc"><h3>' + title + '</h3>' + arr.map(function(x){
+      return '<button class="hi" data-go="' + esc(x.code) + '"><span class="code">' + esc(codeOf(x.code)) + '</span>' + esc(label(x.code))
+        + (hot ? '<span class="v">' + x.n + ' 筆</span>' : '<span class="v ' + (x.d > 0 ? 'up' : 'dn') + '">' + (x.d > 0 ? '+' : '') + x.d + '%</span>') + '</button>';
+    }).join('') + '<p class="note">' + note + '</p></div>';
+  }
+  out += col('🔥 最近最多人在賣', r.hot, '近 5 天貼文最多的款', true);
+  out += col('📈 最近漲最多', r.up, '近 5 天 vs 前 10 天的中位數');
+  out += col('📉 最近跌最多', r.dn, '想買的話可以看看');
+  return out ? '<div class="home">' + out + '</div>' : '';
+}
+function render(){
+  var q = $('q').value.trim(), g = groupBy(search(q));
+  var codes = Object.keys(g).filter(Boolean).sort(function(a, b){ return g[b].length - g[a].length; });
+  $('count').textContent = q ? codes.length + ' 款' + (g[''] ? ' + 其他 ' + g[''].length + ' 筆' : '') : codes.length + ' 款';
+  var html = q ? '' : homeHtml();
+  html += codes.slice(0, 40).map(function(c){ return cardHtml(c, g[c], q); }).join('');
+  if (q && g['']) html += cardHtml('', g[''], q);      /* 沒寫型號的貼文也查得到 */
+  if (!codes.length && !g['']) html += '<div class="empty">最近 15 天沒有貼文提到「' + esc(q) + '」，換個寫法試試</div>';
+  $('list').innerHTML = html;
+}
+
+/* ===================== 划算嗎：關鍵字＋價格 ===================== */
+function dealGo(){
+  var q = $('dKey').value.trim(), price = +String($('dPrice').value).replace(/\D/g, ''), out = $('dOut');
+  if (!q){ out.innerHTML = '<div class="verdict">請輸入關鍵字，例如 UX03 或 神杖。</div>'; return; }
+  if (!price){ out.innerHTML = '<div class="verdict">請輸入價格。</div>'; return; }
+  var g = groupBy(search(q)), keys = Object.keys(g).sort(function(a, b){ return (b ? 1 : 0) - (a ? 1 : 0) || g[b].length - g[a].length; });
+  if (!keys.length){ out.innerHTML = '<div class="verdict">最近 15 天沒有貼文提到「' + esc(q) + '」。</div>'; return; }
+  var code = keys[0], saveV = VER; VER = 0;
+  var s = summary(g[code]); VER = saveV;
+  var name = code ? '<span class="code">' + esc(codeOf(code)) + '</span> ' + esc(label(code)) : '「' + esc(q) + '」';
+  var alt = keys.slice(1, 6).filter(Boolean).map(function(k){ return '<button class="btn" data-deal="' + esc(k) + '">' + esc(codeOf(k)) + ' ' + esc(label(k)) + '</button>'; }).join('');
+  alt = alt ? '<div class="acts" style="padding:10px 0 0"><span class="sub">不是這款？</span>' + alt + '</div>' : '';
+  if (!s){ out.innerHTML = '<div class="verdict">' + name + ' 最近沒有整顆的價格，沒辦法判斷。' + alt + '</div>'; return; }
+  var cls, title, msg, diff = price - s.p;
+  if (price < s.lo){ cls = 'g'; title = '便宜 👍'; msg = '比中位數便宜 ' + nf(-diff) + ' 元，低於常見區間。太便宜要注意是不是二手、缺 QR，或是詐騙。'; }
+  else if (price > s.hi){ cls = 'b'; title = '偏貴'; msg = '比中位數貴 ' + nf(diff) + ' 元，高於常見區間，可以議價或再等等。'; }
+  else { cls = 'm'; title = '合理價'; msg = '在常見區間內，' + (diff > 0 ? '比中位數高 ' + nf(diff) + ' 元' : diff < 0 ? '比中位數低 ' + nf(-diff) + ' 元' : '剛好是中位數') + '。'; }
+  var lo = Math.min(s.lo, price) * 0.85, hi = Math.max(s.hi, price) * 1.15;
+  var P = function(x){ return ((x - lo) / (hi - lo) * 100).toFixed(1) + '%'; };
+  out.innerHTML = '<div class="verdict ' + cls + '"><div class="vt">' + title + '</div>'
+    + '<div>' + name + ' · 你看到的價 <b>NT$' + nf(price) + '</b></div>'
+    + '<div class="sub">' + msg + '</div>'
+    + '<div class="gauge"><div class="iqr" style="left:' + P(s.lo) + ';width:calc(' + P(s.hi) + ' - ' + P(s.lo) + ')"></div>'
+    + '<div class="mk med" style="left:' + P(s.p) + '"><i>中位 ' + nf(s.p) + '</i></div>'
+    + '<div class="mk you" style="left:' + P(price) + '"><i>' + nf(price) + '</i></div></div>'
+    + '<div class="sub">依據：' + winTxt(s) + ' ' + s.n + ' 筆' + s.src + ' · 常見 ' + nf(s.lo) + '～' + nf(s.hi) + '</div>'
+    + '<div class="acts" style="padding:10px 0 0"><button class="btn" data-go="' + esc(code || q) + '">看完整行情</button></div>' + alt + '</div>';
+}
+
+/* ===================== 事件 ===================== */
+function setTab(t){
+  document.querySelectorAll('.tab').forEach(function(b){ b.classList.toggle('on', b.dataset.tab === t); });
+  $('pSearch').hidden = $('searchBar').hidden = t !== 'search';
+  $('pDeal').hidden = t !== 'deal';
+  if (t === 'search') render(); else $('dKey').focus();
+}
+$('tabs').addEventListener('click', function(e){ var b = e.target.closest('.tab'); if (b) setTab(b.dataset.tab); });
+$('q').addEventListener('input', render);
+function segInit(id, attr, cur, cb){
+  var bs = $(id).querySelectorAll('button');
+  bs.forEach(function(x){ x.classList.toggle('on', +x.dataset[attr] === cur); });
+  $(id).addEventListener('click', function(e){
+    var b = e.target.closest('button'); if (!b) return;
+    bs.forEach(function(x){ x.classList.toggle('on', x === b); });
+    cb(+b.dataset[attr]); render();
+  });
+}
+if ([0, 3, 7, 15].indexOf(WIN) < 0) WIN = 0;
+segInit('winSeg', 'w', WIN, function(w){ WIN = w; lsSet(LS_WIN, w); });
+segInit('verSeg', 'v', 0, function(v){ VER = v; });
+document.addEventListener('click', function(e){
+  var t = e.target.closest('[data-fav],[data-open],[data-go],[data-deal],[data-more]'); if (!t) return;
+  if (t.dataset.more){ SHOWN[t.dataset.more] = (SHOWN[t.dataset.more] || PAGE) + PAGE; render(); return; }
+  if (t.dataset.fav){
+    var c = t.dataset.fav;
+    if (FAV[c]) delete FAV[c]; else { var s = summary(groupBy(DATA)[c] || []); FAV[c] = { p: s ? s.p : 0, at: today() }; }
+    lsSet(LS_FAV, FAV); render();
+  } else if (t.dataset.open){ OPEN[t.dataset.open] = !OPEN[t.dataset.open]; render(); }
+  else if (t.dataset.go){ $('q').value = t.dataset.go; setTab('search'); window.scrollTo(0, 0); }
+  else if (t.dataset.deal){ $('dKey').value = t.dataset.deal; dealGo(); }
+});
+$('dGo').addEventListener('click', dealGo);
+[$('dKey'), $('dPrice')].forEach(function(el){ el.addEventListener('keydown', function(e){ if (e.key === 'Enter') dealGo(); }); });
+
+render();
+</script>
+</body>
+</html>
